@@ -20,6 +20,7 @@
 #include "poncho.h"
 #include "chip.h"
 #include "pantalla.h"
+#include "clock.h"    
 
 /* === Macros definitions ====================================================================== */
 
@@ -33,14 +34,21 @@ typedef enum {
   AJUSTANDO_HORAS_ALARMA
 } modo_t;
 /* === Private variable declarations =========================================================== */
-
+   
 /* === Private function declarations =========================================================== */
 
 /* === Public variable definitions ============================================================= */
-static board_t board;
-static modo_t modo;
+
 /* === Private variable definitions ============================================================ */
 
+static board_t board;
+static modo_t modo; 
+static clock_t clock;
+static const uint8_t LIMITE_MINUTOS[] = {5,9};
+static const uint8_t LIMITE_HORAS[] = {2,3};
+
+
+/* === Private function implementation ========================================================= */
 void CambiarModo(modo_t valor){
   modo = valor;
   switch (modo)
@@ -68,8 +76,23 @@ void CambiarModo(modo_t valor){
   }
 }
 
-/* === Private function implementation ========================================================= */
+void SonarAlarma(clock_t clock, bool state){}
 
+void IncrementarBCD(uint8_t numero[2], const uint8_t limite[2]){
+  numero[1]++;
+  if(numero[1]>9){
+    numero[1] = 0;
+    numero[0]++;
+  }
+  if((numero[0]>limite[0])&&(numero[1]>limite[1])){
+    numero[0] = 0;
+    numero[1] = 0;
+  }
+}
+
+void DecrementarBCD(uint8_t numero[2], const uint8_t limite[2]){
+  
+}
 /* === Public function implementation ========================================================= */
 /**
  * This program has four different linking leds. 
@@ -82,32 +105,50 @@ void CambiarModo(modo_t valor){
 
 int main(void) {  
     
-
-    uint8_t numbers[4] = {1,2,3,4}; 
+    uint8_t entrada[4]; 
+    
 
     board_t board = BoardCreate();
+    clock = createClock(100, SonarAlarma);
 
     SisTick_Init(1000); // configuro el ciclo de tiempo de la interrupcion
     CambiarModo(HORA_SIN_AJUSTAR); // RELOJ ARRANCA CON HORA SIN AJUSTAR
 
     if(DigitalInputHasActivated(board->accept)){
-      DisplayWriteBCD(board->display,(uint8_t []){1,2,3,4}, 4);
-      DisplayToggleDots(board->display,1,2)
+      
     }
 
     if(DigitalInputHasActivated(board->cancel)){
-      DisplayWriteBCD(board->display,NULL, 0);
+
     }
 
-    if(DigitalInputHasActivated(board->set_time)){}
+    if(DigitalInputHasActivated(board->set_time)){
+      CambiarModo(AJUSTANDO_MINUTOS_ACTUAL);
+      getTimeClock(clock, entrada, sizeof(entrada));
+      DisplayWriteBCD(board->display, entrada, sizeof(entrada)); 
+    }
 
     if(DigitalInputHasActivated(board->set_alarm)){}
 
-    if(DigitalInputHasActivated(board->decrement)){}
+    if(DigitalInputHasActivated(board->decrement)){
+      if((modo == AJUSTANDO_MINUTOS_ACTUAL)||(modo == AJUSTANDO_MINUTOS_ALARMA)){
 
-    if(DigitalInputHasActivated(board->increment)){}
+      }
+      else if((modo == AJUSTANDO_HORAS_ACTUAL)||(modo==AJUSTANDO_HORAS_ALARMA)){
 
-    DisplayWriteBCD(board->display, numbers, sizeof(numbers)); // writing 1 2 3 4 in the screen
+      }
+    }
+
+    if(DigitalInputHasActivated(board->increment)){
+      if((modo == AJUSTANDO_MINUTOS_ACTUAL)||(modo == AJUSTANDO_MINUTOS_ALARMA)){
+        IncrementarBCD(&entrada[2], LIMITE_MINUTOS);
+      }
+      else if((modo == AJUSTANDO_HORAS_ACTUAL)||(modo==AJUSTANDO_HORAS_ALARMA)){
+        IncrementarBCD(&entrada[0], LIMITE_HORAS);
+      } 
+    }
+
+    // DisplayWriteBCD(board->display, numbers, sizeof(numbers)); // writing 1 2 3 4 in the screen
 
     while (true) {
 
@@ -120,7 +161,13 @@ int main(void) {
 }
 
 void Systick_Handler(void){ // Rutina de interrupcion
+  uint8_t hora[4]; 
   DisplayRefresh(board->display);
+  tickClock(clock); 
+  if(modo<=MOSTRANDO_HORA){
+    getTimeClock(clock, hora, sizeof(hora));
+    DisplayWriteBCD(board->display,hora, sizeof(hora));
+  }
 }
 
 /* === End of documentation ==================================================================== */
