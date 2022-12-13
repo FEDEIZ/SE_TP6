@@ -24,14 +24,49 @@
 /* === Macros definitions ====================================================================== */
 
 /* === Private data type declarations ========================================================== */
-
+typedef enum {
+  HORA_SIN_AJUSTAR,
+  MOSTRANDO_HORA,
+  AJUSTANDO_MINUTOS_ACTUAL,
+  AJUSTANDO_HORAS_ACTUAL,
+  AJUSTANDO_MINUTOS_ALARMA,
+  AJUSTANDO_HORAS_ALARMA
+} modo_t;
 /* === Private variable declarations =========================================================== */
 
 /* === Private function declarations =========================================================== */
 
 /* === Public variable definitions ============================================================= */
-
+static board_t board;
+static modo_t modo;
 /* === Private variable definitions ============================================================ */
+
+void CambiarModo(modo_t valor){
+  modo = valor;
+  switch (modo)
+  {
+  case HORA_SIN_AJUSTAR:
+    DisplayFlashDigits(board->display, 0, 3, 250);
+    break;
+  case MOSTRANDO_HORA:
+    DisplayFlashDigits(board->display, 0, 0, 0 );
+    break;
+  case AJUSTANDO_MINUTOS_ACTUAL:
+    DisplayFlashDigits(board->display, 2, 3, 250);
+    break;
+  case AJUSTANDO_HORAS_ACTUAL:
+    DisplayFlashDigits(board->display, 0, 1, 250);
+    break;
+  case AJUSTANDO_MINUTOS_ALARMA:
+    DisplayFlashDigits(board->display, 2, 3, 250);
+    break;
+  case AJUSTANDO_HORAS_ALARMA:
+    DisplayFlashDigits(board->display, 0, 1, 250);  
+    break;
+  default:
+    break;
+  }
+}
 
 /* === Private function implementation ========================================================= */
 
@@ -53,7 +88,8 @@ int main(void) {
     board_t board = BoardCreate();
 
     SisTick_Init(1000); // configuro el ciclo de tiempo de la interrupcion
-    
+    CambiarModo(HORA_SIN_AJUSTAR); // RELOJ ARRANCA CON HORA SIN AJUSTAR
+
     if(DigitalInputHasActivated(board->accept)){
       DisplayWriteBCD(board->display,(uint8_t []){1,2,3,4}, 4);
       DisplayToggleDots(board->display,1,2)
