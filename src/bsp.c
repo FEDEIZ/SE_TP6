@@ -66,10 +66,10 @@ void KeyInit(void){
     board.set_alarm = DigitalInputCreate(KEY_F2_GPIO, KEY_F2_BIT);
 
     Chip_SCU_PinMuxSet(KEY_F3_PORT, KEY_F3_PIN, SCU_MODE_INBUFF_EN | SCU_MODE_PULLUP | KEY_F3_FUNC);
-    board.decrement = DigitalInputCreate(KEY_F3_GPIO, KEY_F3_BIT);
+    board.increment = DigitalInputCreate(KEY_F3_GPIO, KEY_F3_BIT);
 
     Chip_SCU_PinMuxSet(KEY_F4_PORT, KEY_F4_PIN ,SCU_MODE_INBUFF_EN | SCU_MODE_PULLUP | KEY_F4_FUNC);
-    board.increment = DigitalInputCreate(KEY_F4_GPIO, KEY_F4_BIT);
+    board.decrement = DigitalInputCreate(KEY_F4_GPIO, KEY_F4_BIT);
 }
 
 void DigitsInit(void){
